@@ -1,0 +1,33 @@
+STEPS
+
+1> openssl rand 16 > enc.key
+2> openssl rand -hex 16 [copy the random hex to some safe location]
+3> touch enc.keyinfo
+   3.1> nano enc.keyinfo
+   3.2> [
+      https://hlsbook.net/enc.key
+      enc.key
+      ecd0d06ea**********33928e87efa33
+   ]
+4> [
+  ffmpeg -y -i source_video.mp4 -hls_time 20 -hls_key_info_file enc.keyinfo -hls_playlist_type vod -hls_segment_filename "chunks/chunk-%d.ts" chunks/chunks_details.m3u8
+]
+
+https://ffmpeg.org/ffmpeg-formats.html
+
+- hls_time seconds
+Set the target segment length in seconds. Default value is 2. Segment will be cut on the next key frame after this time has passed.
+
+- hls_key_info_file key_info_file
+Use the information in key_info_file for segment encryption. The first line of key_info_file specifies the key URI written to the playlist. The key URL is used to access the encryption key during playback. The second line specifies the path to the key file used to obtain the key during the encryption process. The key file is read as a single packed array of 16 octets in binary format. The optional third line specifies the initialization vector (IV) as a hexadecimal string to be used instead of the segment sequence number (default) for encryption. Changes to key_info_file will result in segment encryption with the new key/IV and an entry in the playlist for the new key URI/IV if hls_flags periodic_rekey is enabled.
+
+- hls_playlist_type vod
+Emit #EXT-X-PLAYLIST-TYPE:VOD in the m3u8 header. Forces hls_list_size to 0; the playlist must not change.
+
+- hls_segment_filename filename
+    Set the segment filename. Unless hls_flags single_file is set, filename is used as a string format with the segment number:
+
+    ffmpeg -i in.nut -hls_segment_filename 'file%03d.ts' out.m3u8
+    This example will produce the playlist, out.m3u8, and segment files: file000.ts, file001.ts, file002.ts, etc.
+
+    filename may contain full path or relative path specification, but only the file name part without any path info will be contained in the m3u8 segment list. Should a relative path be specified, the path of the created segment files will be relative to the current working directory. When strftime_mkdir is set, the whole expanded value of filename will be written into the m3u8 segment list.
